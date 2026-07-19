@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظم المذاكرة | Study Planner</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap');
+
+        :root {
+            --primary-pink: #ffb7c5;
+            --dark-pink: #d88fa0;
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --text-light: #fff;
+            --text-dark: #333;
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Cairo', sans-serif; 
+        }
+        
+        body { 
+            /* خلفية الساكورا عالية الجودة */
+            background-image: url('https://images.unsplash.com/photo-1522383225653-ed111181a951?q=80&w=2076&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text-light); 
+            display: flex; 
+            height: 100vh; 
+        }
+
+        /* تأثير الزجاج العام */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        /* القائمة الجانبية */
+        .sidebar { 
+            width: 260px; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            margin: 15px;
+        }
+        .sidebar h2 { 
+            text-align: center; 
+            margin-bottom: 30px; 
+            font-size: 26px; 
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+        }
+        .sidebar button { 
+            background: rgba(0, 0, 0, 0.2); 
+            border: 1px solid transparent; 
+            color: var(--text-light); 
+            padding: 15px; 
+            text-align: right; 
+            width: 100%; 
+            font-size: 16px; 
+            font-weight: 600;
+            cursor: pointer; 
+            transition: 0.3s; 
+            border-radius: 10px; 
+            margin-bottom: 10px; 
+        }
+        .sidebar button:hover, .sidebar button.active { 
+            background: rgba(255, 255, 255, 0.25); 
+            border-right: 4px solid var(--primary-pink); 
+            border-left: 1px solid var(--glass-border);
+            border-top: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        /* المحتوى الرئيسي */
+        .main-content { 
+            flex: 1; 
+            padding: 20px; 
+            overflow-y: auto; 
+            margin: 15px 15px 15px 0;
+        }
+        .section { display: none; animation: fadeIn 0.5s; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        h1 { margin-bottom: 20px; text-shadow: 1px 1px 4px rgba(0,0,0,0.5); }
+
+        /* البطاقات ولوحة التحكم */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { padding: 20px; text-align: center; transition: 0.3s; }
+        .card h3 { font-size: 18px; margin-bottom: 10px; font-weight: normal; }
+        .card p { font-size: 32px; font-weight: bold; color: var(--primary-pink); text-shadow: 1px 1px 2px rgba(0,0,0,0.8);}
+
+        /* القوائم والمهام */
+        .list-container { padding: 20px; margin-bottom: 20px; }
+        .item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px; 
+            border-bottom: 1px solid rgba(255,255,255,0.2); 
+            background: rgba(0,0,0,0.1);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .item:last-child { margin-bottom: 0; }
+        .badge { padding: 5px 10px; border-radius: 15px; font-size: 13px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+
+        /* النماذج (إضافة مادة / مهمة) */
+        .form-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        input, select {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 150px;
+            outline: none;
+        }
+        input::placeholder { color: #eee; }
+        input[type="color"] { padding: 2px; cursor: pointer; height: 45px;}
+        option { background: #333; color: #fff; }
+
+        .btn-action {
+            background: var(--primary-pink);
+            color: #333;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .btn-action:hover { background: var(--dark-pink); color: #fff; transform: translateY(-2px); }
+
+        /* مؤقت بومودورو */
+        .timer-container { text-align: center; padding: 40px; max-width: 450px; margin: 40px auto; }
+        .time-display { font-size: 70px; font-weight: 800; margin: 20px 0; text-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+        .timer-controls { display: flex; justify-content: center; gap: 15px; }
+
+        /* تخصيص الـ Checkbox */
+        input[type="checkbox"] {
+            width: 18px; height: 18px; accent-color: var(--primary-pink); cursor: pointer; margin-left: 10px;
+        }
+        .task-label { display: flex; align-items: center; font-size: 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <!-- القائمة الجانبية -->
+    <div class="sidebar glass">
+        <h2>منظم المذاكرة</h2>
+        <button class="nav-btn active" onclick="showSection('dashboard')">🏠 لوحة التحكم</button>
+        <button class="nav-btn" onclick="showSection('subjects')">📚 إدارة المواد</button>
+        <button class="nav-btn" onclick="showSection('tasks')">✅ قائمة المهام</button>
+        <button class="nav-btn" onclick="showSection('timer')">⏱️ مؤقت بومودورو</button>
+        <button class="nav-btn" onclick="showSection('exams')">📅 الامتحانات</button>
+    </div>
+
+    <!-- المحتوى الرئيسي -->
+    <div class="main-content glass">
+        
+        <!-- قسم لوحة التحكم -->
+        <div id="dashboard" class="section active">
+            <h1>مرحباً، ملخص إنجازاتك اليوم ✨</h1>
+            <div class="dashboard-grid">
+                <div class="card glass">
+                    <h3>ساعات المذاكرة</h3>
+                    <p>4.5</p>
+                </div>
+                <div class="card glass">
+                    <h3>المهام المنجزة</h3>
+                    <p id="dashboard-tasks">2</p>
+                </div>
+                <div class="card glass">
+                    <h3>نسبة التقدم</h3>
+                    <p>75%</p>
+                </div>
+                <div class="card glass">
+                    <h3>عدد المواد</h3>
+                    <p id="dashboard-subjects-count">3</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- قسم إدارة المواد -->
+        <div id="subjects" class="section">
+            <h1>إدارة المواد 📚</h1>
+            
+            <!-- نموذج إضافة مادة -->
+            <div class="glass" style="padding: 20px; margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px;">إضافة مادة جديدة</h3>
+                <div class="form-group">
+                    <input type="text" id="sub-name" placeholder="اسم المادة (مثال: رياضيات)">
+                    <input type="text" id="sub-teacher" placeholder="اسم المعلم">
+                    <input type="number" id="sub-hours" placeholder="الساعات الأسبوعية">
+                    <input type="color" id="sub-color" value="#ffb7c5" title="اختر لون المادة">
+                    <button class="btn-action" onclick="addSubject()">إضافة ➕</button>
+                </div>
+            </div>
+
+            <!-- قائمة المواد -->
+            <div class="list-container glass" id="subjects-list">
+                <div class="item">
+                    <span><strong style="color: #e74c3c">الفيزياء</strong> - المعلم: أ. أحمد</span>
+                    <span class="badge" style="background-color: #e74c3c">الهدف: 6 ساعات</span>
+                </div>
+                <div class="item">
+                    <span><strong style="color: #3498db">الكيمياء</strong> - المعلم: د. محمود</span>
+                    <span class="badge" style="background-color: #3498db">الهدف: 5 ساعات</span>
+                </div>
+                <div class="item">
+                    <span><strong style="color: #2ecc71">الأحياء</strong> - المعلم: أ. سارة</span>
+                    <span class="badge" style="background-color: #2ecc71">الهدف: 4 ساعات</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- قسم المهام -->
+        <div id="tasks" class="section">
+            <h1>قائمة المهام والواجبات ✅</h1>
+            
+            <!-- نموذج إضافة مهمة -->
+            <div class="glass" style="padding: 20px; margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px;">إضافة مهمة جديدة</h3>
+                <div class="form-group">
+                    <input type="text" id="task-name" placeholder="ما الذي تريد إنجازه؟ (مثال: حل مسائل)">
+                    <select id="task-priority">
+                        <option value="high">أولوية عالية</option>
+                        <option value="med">أولوية متوسطة</option>
+                        <option value="low">أولوية منخفضة</option>
+                    </select>
+                    <button class="btn-action" onclick="addTask()">إضافة ➕</button>
+                </div>
+            </div>
+
+            <div class="list-container glass" id="tasks-list">
+                <div class="item">
+                    <label class="task-label"><input type="checkbox" onchange="updateTaskCount()"> حل 20 مسألة ميكانيكا</label>
+                    <span class="badge" style="background-color: #e74c3c">عالية</span>
+                </div>
+                <div class="item">
+                    <label class="task-label"><input type="checkbox" onchange="updateTaskCount()"> مراجعة التفاعلات العضوية</label>
+                    <span class="badge" style="background-color: #f39c12">متوسطة</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- قسم مؤقت بومودورو -->
+        <div id="timer" class="section">
+            <h1>مؤقت التركيز ⏱️</h1>
+            <div class="timer-container glass">
+                <h2 id="timer-status">جلسة مذاكرة</h2>
+                <div class="time-display" id="time">25:00</div>
+                <div class="timer-controls">
+                    <button class="btn-action" onclick="startTimer()">ابدأ التركيز ▶️</button>
+                    <button class="btn-action" style="background: rgba(255,255,255,0.3); color: #fff;" onclick="resetTimer()">إعادة ضبط 🔄</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- قسم الامتحانات -->
+        <div id="exams" class="section">
+            <h1>الامتحانات 📅</h1>
+            <div class="list-container glass">
+                <p style="text-align: center; padding: 20px; opacity: 0.8;">لا توجد امتحانات قريبة حالياً. سيتم تفعيل هذه الميزة مع قاعدة البيانات.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // التبديل بين الأقسام
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // --- وظيفة إضافة مادة ---
+        let subjectCount = 3;
+        function addSubject() {
+            const name = document.getElementById('sub-name').value;
+            const teacher = document.getElementById('sub-teacher').value || 'غير محدد';
+            const hours = document.getElementById('sub-hours').value || '0';
+            const color = document.getElementById('sub-color').value;
+
+            if (name.trim() === '') {
+                alert('يرجى إدخال اسم المادة!');
+                return;
+            }
+
+            const list = document.getElementById('subjects-list');
+            const newItem = document.createElement('div');
+            newItem.className = 'item';
+            newItem.innerHTML = `
+                <span><strong style="color: ${color}">${name}</strong> - المعلم: ${teacher}</span>
+                <span class="badge" style="background-color: ${color}; color: #333;">الهدف: ${hours} ساعات</span>
+            `;
+            
+            list.appendChild(newItem);
+            
+            // تحديث العدد في لوحة التحكم
+            subjectCount++;
+            document.getElementById('dashboard-subjects-count').innerText = subjectCount;
+
+            // تفريغ الحقول
+            document.getElementById('sub-name').value = '';
+            document.getElementById('sub-teacher').value = '';
+            document.getElementById('sub-hours').value = '';
+        }
+
+        // --- وظيفة إضافة مهمة ---
+        function addTask() {
+            const name = document.getElementById('task-name').value;
+            const priority = document.getElementById('task-priority').value;
+            
+            if (name.trim() === '') {
+                alert('يرجى إدخال وصف المهمة!');
+                return;
+            }
+
+            let color = '';
+            let priorityText = '';
+            
+            if(priority === 'high') { color = '#e74c3c'; priorityText = 'عالية'; }
+            else if(priority === 'med') { color = '#f39c12'; priorityText = 'متوسطة'; }
+            else { color = '#2ecc71'; priorityText = 'منخفضة'; }
+
+            const list = document.getElementById('tasks-list');
+            const newItem = document.createElement('div');
+            newItem.className = 'item';
+            newItem.innerHTML = `
+                <label class="task-label"><input type="checkbox" onchange="updateTaskCount()"> ${name}</label>
+                <span class="badge" style="background-color: ${color}">${priorityText}</span>
+            `;
+            
+            list.appendChild(newItem);
+            document.getElementById('task-name').value = '';
+        }
+
+        // --- تحديث عدد المهام المنجزة تلقائياً ---
+        function updateTaskCount() {
+            const checkboxes = document.querySelectorAll('#tasks-list input[type="checkbox"]:checked');
+            document.getElementById('dashboard-tasks').innerText = checkboxes.length;
+        }
+
+        // --- وظيفة مؤقت بومودورو ---
+        let timeLeft = 25 * 60; // 25 دقيقة
+        let timerId = null;
+        const timeDisplay = document.getElementById('time');
+
+        function updateDisplay() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            timeDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function startTimer() {
+            if (timerId === null) {
+                document.getElementById('timer-status').textContent = "جارٍ التركيز...";
+                timerId = setInterval(() => {
+                    timeLeft--;
+                    updateDisplay();
+                    if (timeLeft <= 0) {
+                        clearInterval(timerId);
+                        timerId = null;
+                        alert("انتهى وقت المذاكرة! أحسنت. خذ استراحة قصيرة.");
+                        timeLeft = 5 * 60; // استراحة 5 دقائق
+                        document.getElementById('timer-status').textContent = "وقت الاستراحة";
+                        updateDisplay();
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerId);
+            timerId = null;
+            timeLeft = 25 * 60;
+            document.getElementById('timer-status').textContent = "جلسة مذاكرة";
+            updateDisplay();
+        }
+        
+        // استدعاء دالة التحديث للمهام عند فتح الصفحة
+        updateTaskCount();
+    </script>
+</body>
+</html>
